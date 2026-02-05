@@ -1,0 +1,59 @@
+{
+	"name": "ai-diff-sample",
+	"displayName": "AI Diff Sample",
+	"description": "Demonstrates usage of the AI Diff API",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.96.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "aiDiffSample.start",
+				"title": "Start AI Diff Session"
+			},
+			{
+				"command": "aiDiffSample.accept",
+				"title": "Accept AI Diff Session"
+			},
+			{
+				"command": "aiDiffSample.reject",
+				"title": "Reject AI Diff Session"
+			},
+            {
+                "command": "aiDiffSample.simulateEdit",
+                "title": "Simulate AI Edit"
+            }
+		],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "ai-diff-explorer",
+                    "title": "AI Diff",
+                    "icon": "media/icon.svg"
+                }
+            ]
+        },
+        "views": {
+            "ai-diff-explorer": [
+                {
+                    "id": "aiDiffView",
+                    "name": "Diff Stats"
+                }
+            ]
+        }
+	},
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.96.0",
+        "typescript": "^5.3.0"
+    }
+}

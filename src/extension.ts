@@ -1,31 +1,5 @@
 import * as vscode from 'vscode';
 
-// Define the interface as provided by the user
-declare module 'vscode' {
-    export namespace chat {
-        export interface ChatEditingFile {
-            uri: vscode.Uri;
-            state: number;
-            added: number;
-            removed: number;
-        }
-
-        export interface ChatEditingSession {
-            readonly files: readonly ChatEditingFile[];
-            readonly onDidChange: vscode.Event<void>;
-            applyEdits(edit: vscode.WorkspaceEdit, description?: string): Promise<void>;
-            accept(): Promise<void>;
-            reject(): Promise<void>;
-        }
-
-        export function createEditingSession(): Promise<ChatEditingSession>;
-        
-        // Extended API for session access
-        export const editingSessions: readonly ChatEditingSession[];
-        export const onDidCreateEditingSession: vscode.Event<void>;
-    }
-}
-
 export function activate(context: vscode.ExtensionContext) {
 
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
@@ -62,20 +36,6 @@ export function activate(context: vscode.ExtensionContext) {
         updateUI();
         vscode.window.showInformationMessage('AI Diff Session Attached/Resumed');
     };
-
-    // Check for existing sessions on activation (Resumption)
-    if (vscode.chat.editingSessions && vscode.chat.editingSessions.length > 0) {
-        attachSession(vscode.chat.editingSessions[0]);
-    }
-    
-    // Listen for new sessions
-    if (vscode.chat.onDidCreateEditingSession) {
-        context.subscriptions.push(vscode.chat.onDidCreateEditingSession(() => {
-             if (!currentSession && vscode.chat.editingSessions.length > 0) {
-                 attachSession(vscode.chat.editingSessions[0]);
-             }
-        }));
-    }
 
     // Start Session
     context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.start', async () => {

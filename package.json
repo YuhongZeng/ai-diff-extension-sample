@@ -19,17 +19,122 @@
 			},
 			{
 				"command": "aiDiffSample.accept",
-				"title": "Accept AI Diff Session"
+				"title": "Accept All Changes",
+				"icon": "$(check-all)"
 			},
 			{
 				"command": "aiDiffSample.reject",
-				"title": "Reject AI Diff Session"
+				"title": "Reject All Changes",
+				"icon": "$(clear-all)"
 			},
-            {
-                "command": "aiDiffSample.simulateEdit",
-                "title": "Simulate AI Edit"
-            }
+			{
+				"command": "aiDiffSample.createMultiSession",
+				"title": "New Session",
+				"icon": "$(add)"
+			},
+			{
+				"command": "aiDiffSample.simulateEdit",
+				"title": "Simulate AI Edit"
+			},
+			{
+				"command": "aiDiffSample.startSimulation",
+				"title": "Interactive Diff Simulation: Start"
+			},
+			{
+				"command": "aiDiffSample.applySimulation",
+				"title": "Interactive Diff Simulation: Apply"
+			},
+			{
+				"command": "aiDiffSample.acceptFile",
+				"title": "Accept File",
+				"icon": "$(check)"
+			},
+			{
+				"command": "aiDiffSample.rejectFile",
+				"title": "Reject File",
+				"icon": "$(close)"
+			},
+			{
+				"command": "aiDiffSample.toggleDiff",
+				"title": "Toggle Diff View"
+			},
+			{
+				"command": "aiDiffSample.nextFile",
+				"title": "Next Modified File"
+			},
+			{
+				"command": "aiDiffSample.prevFile",
+				"title": "Previous Modified File"
+			},
+			{
+				"command": "aiDiffSample.simulateComplexEdits",
+				"title": "Simulate Complex Edits (Files/Lines)"
+			},
+			{
+				"command": "aiDiffSample.deleteFile",
+				"title": "Delete File (AI Diff)"
+			},
+			{
+				"command": "aiDiffSample.renameFile",
+				"title": "Rename File (AI Diff)"
+			}
 		],
+		"menus": {
+			"editor/context": [
+				{
+					"command": "aiDiffSample.startSimulation",
+					"group": "navigation"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "aiDiffSample.deleteFile",
+					"group": "2_workspace",
+					"when": "!explorerResourceIsRoot"
+				},
+				{
+					"command": "aiDiffSample.renameFile",
+					"group": "2_workspace",
+					"when": "!explorerResourceIsRoot"
+				}
+			],
+			"editor/title": [
+				{
+					"command": "aiDiffSample.applySimulation",
+					"group": "navigation",
+					"when": "resourceScheme == 'untitled'"
+				}
+			],
+			"view/title": [
+				{
+					"command": "aiDiffSample.accept",
+					"when": "view == aiDiffView",
+					"group": "navigation"
+				},
+				{
+					"command": "aiDiffSample.reject",
+					"when": "view == aiDiffView",
+					"group": "navigation"
+				},
+				{
+					"command": "aiDiffSample.createMultiSession",
+					"when": "view == aiDiffView",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "aiDiffSample.acceptFile",
+					"when": "view == aiDiffView && viewItem == aiDiffFile",
+					"group": "inline"
+				},
+				{
+					"command": "aiDiffSample.rejectFile",
+					"when": "view == aiDiffView && viewItem == aiDiffFile",
+					"group": "inline"
+				}
+			]
+		},
         "viewsContainers": {
             "activitybar": [
                 {
@@ -43,7 +148,8 @@
             "ai-diff-explorer": [
                 {
                     "id": "aiDiffView",
-                    "name": "Diff Stats"
+                    "name": "Diff Stats",
+					"icon": "resources/StartAppIcon.svg"
                 }
             ]
         }

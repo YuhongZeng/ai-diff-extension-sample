@@ -9,12 +9,16 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.createTreeView('aiDiffView', { treeDataProvider });
 
     let sessions: vscode.chat.ChatEditingSession[] = [];
+    let currentSession: vscode.chat.ChatEditingSession | undefined;
 
     const updateUI = () => {
-        let totalFiles: vscode.chat.ChatEditingFile[] = [];
-        sessions.forEach(s => totalFiles = totalFiles.concat(s.files));
+        const sessionToDisplay = currentSession || sessions[sessions.length - 1];
+        let displayFiles: vscode.chat.ChatEditingFile[] = [];
+        if (sessionToDisplay) {
+            displayFiles = [...sessionToDisplay.files];
+        }
         
-        if (totalFiles.length === 0) {
+        if (displayFiles.length === 0) {
             statusBarItem.hide();
             treeDataProvider.update([]);
             return;
@@ -22,26 +26,86 @@ export function activate(context: vscode.ExtensionContext) {
 
         let added = 0;
         let removed = 0;
-        totalFiles.forEach(f => {
+        displayFiles.forEach(f => {
             added += f.added;
             removed += f.removed;
         });
         
-        statusBarItem.text = `$(diff-modified) AI Diff: ${sessions.length} Sessions | +${added} -${removed}`;
+        statusBarItem.text = `$(diff-modified) AI Diff: ${sessions.length} Sessions | Current: ${sessionToDisplay?.id.substring(0, 8)} | +${added} -${removed}`;
         statusBarItem.show();
-        treeDataProvider.update(totalFiles);
+        treeDataProvider.update(displayFiles);
     };
 
     const attachSession = (session: vscode.chat.ChatEditingSession) => {
         sessions.push(session);
+        currentSession = session;
+        
+        // Update persistence
+        let ids = context.globalState.get<string[]>('chatEditingSessionIds') || [];
+        if (!ids.includes(session.id)) {
+            ids.push(session.id);
+            context.globalState.update('chatEditingSessionIds', ids);
+        }
+        context.globalState.update('lastActiveChatEditingSessionId', session.id);
+
         context.subscriptions.push(session.onDidChange(updateUI));
         context.subscriptions.push(session.onDidDispose(() => {
             sessions = sessions.filter(s => s !== session);
+            
+            // Remove from persistence
+            let ids = context.globalState.get<string[]>('chatEditingSessionIds') || [];
+            ids = ids.filter(id => id !== session.id);
+            context.globalState.update('chatEditingSessionIds', ids);
+
+            if (currentSession === session) {
+                currentSession = sessions[sessions.length - 1];
+            }
+            
+            if (sessions.length === 0) {
+                context.globalState.update('lastActiveChatEditingSessionId', undefined);
+            } else if (currentSession) {
+                context.globalState.update('lastActiveChatEditingSessionId', currentSession.id);
+            }
             updateUI();
         }));
         updateUI();
-        vscode.window.showInformationMessage('AI Diff Session Created');
+        vscode.window.showInformationMessage('AI Diff Session Created/Restored');
     };
+
+    // Try to restore previous sessions
+    const restoreSessions = async () => {
+        let lastSessionIds = context.globalState.get<string[]>('chatEditingSessionIds') || [];
+        const legacyId = context.globalState.get<string>('lastChatEditingSessionId');
+        if (legacyId && !lastSessionIds.includes(legacyId)) {
+            lastSessionIds.push(legacyId);
+            context.globalState.update('lastChatEditingSessionId', undefined); // Migrate
+        }
+        
+        const lastActiveId = context.globalState.get<string>('lastActiveChatEditingSessionId');
+
+        for (const id of lastSessionIds) {
+            try {
+                // @ts-ignore - using proposed API
+                const session = await vscode.chat.startEditingSession({ chatSessionId: id });
+                attachSession(session);
+            } catch (e) {
+                // Failed to restore, remove from list
+                let ids = context.globalState.get<string[]>('chatEditingSessionIds') || [];
+                ids = ids.filter(savedId => savedId !== id);
+                context.globalState.update('chatEditingSessionIds', ids);
+            }
+        }
+        
+        // Restore active session selection
+        if (lastActiveId) {
+            const active = sessions.find(s => s.id === lastActiveId);
+            if (active) {
+                currentSession = active;
+                updateUI();
+            }
+        }
+    };
+    restoreSessions();
 
     // --- Commands ---
 
@@ -61,9 +125,57 @@ export function activate(context: vscode.ExtensionContext) {
         await vscode.commands.executeCommand('aiDiffSample.start');
     }));
 
+    // 2.1 Switch Session
+    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.switchSession', async () => {
+        if (sessions.length === 0) {
+            vscode.window.showInformationMessage('No active sessions');
+            return;
+        }
+
+        const items = sessions.map((s, i) => ({
+            label: `Session ${i + 1} (${s.id.substring(0, 8)})`,
+            description: s === currentSession ? '(Current)' : '',
+            session: s
+        }));
+
+        const selected = await vscode.window.showQuickPick(items, {
+            placeHolder: 'Select a session to switch to'
+        });
+
+        if (selected) {
+            currentSession = selected.session;
+            context.globalState.update('lastActiveChatEditingSessionId', currentSession.id);
+            updateUI();
+        }
+    }));
+
+    // 2.2 Delete Session
+    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.deleteSession', async () => {
+        if (sessions.length === 0) {
+            vscode.window.showInformationMessage('No active sessions');
+            return;
+        }
+
+        const items = sessions.map((s, i) => ({
+            label: `Session ${i + 1} (${s.id.substring(0, 8)})`,
+            description: s === currentSession ? '(Current)' : '',
+            session: s
+        }));
+
+        const selected = await vscode.window.showQuickPick(items, {
+            placeHolder: 'Select a session to delete'
+        });
+
+        if (selected) {
+            const session = selected.session;
+            session.dispose(); // This will trigger onDidDispose which handles cleanup
+            vscode.window.showInformationMessage('Session Deleted');
+        }
+    }));
+
     // 3. Simulate Simple Edit
     context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.simulateEdit', async () => {
-        const session = sessions[sessions.length - 1];
+        const session = currentSession;
         const editor = vscode.window.activeTextEditor;
         if (editor && session) {
             const edit = new vscode.WorkspaceEdit();
@@ -77,7 +189,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 4. Accept All
     context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.accept', async () => {
-        const session = sessions[sessions.length - 1];
+        const session = currentSession;
         if (session) {
             await session.accept();
             vscode.window.showInformationMessage('Session Accepted');
@@ -86,7 +198,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 5. Reject All
     context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.reject', async () => {
-        const session = sessions[sessions.length - 1];
+        const session = currentSession;
         if (session) {
             await session.reject();
             vscode.window.showInformationMessage('Session Rejected');
@@ -160,7 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 10. Simulate Complex Edits
     context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.simulateComplexEdits', async () => {
-        const session = sessions[sessions.length - 1];
+        const session = currentSession;
         if (!session) {
              vscode.window.showErrorMessage('No active session');
              return;
@@ -203,7 +315,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         // Ensure session exists
-        let session = sessions[sessions.length - 1];
+        let session = currentSession;
         if (!session) {
             try {
                 // @ts-ignore - using proposed API
@@ -242,7 +354,7 @@ export function activate(context: vscode.ExtensionContext) {
         const newUri = vscode.Uri.file(newName);
 
         // Ensure session exists
-        let session = sessions[sessions.length - 1];
+        let session = currentSession;
         if (!session) {
             try {
                 // @ts-ignore - using proposed API
@@ -339,7 +451,7 @@ export function activate(context: vscode.ExtensionContext) {
         const edits = computeMinimalEdits(simulationState.originalContent, modifiedContent);
 
         // Ensure session exists
-        let session = sessions[sessions.length - 1];
+        let session = currentSession;
         if (!session) {
             // @ts-ignore - using proposed API
             session = await vscode.chat.startEditingSession();

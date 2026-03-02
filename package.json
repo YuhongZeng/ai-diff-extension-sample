@@ -29,8 +29,18 @@
 			},
 			{
 				"command": "aiDiffSample.createMultiSession",
-				"title": "New Session",
+				"title": "Add Session",
 				"icon": "$(add)"
+			},
+			{
+				"command": "aiDiffSample.switchSession",
+				"title": "Switch Session",
+				"icon": "$(list-selection)"
+			},
+			{
+				"command": "aiDiffSample.deleteSession",
+				"title": "Delete Session",
+				"icon": "$(trash)"
 			},
 			{
 				"command": "aiDiffSample.simulateEdit",
@@ -118,6 +128,16 @@
 				},
 				{
 					"command": "aiDiffSample.createMultiSession",
+					"when": "view == aiDiffView",
+					"group": "navigation"
+				},
+				{
+					"command": "aiDiffSample.switchSession",
+					"when": "view == aiDiffView",
+					"group": "navigation"
+				},
+				{
+					"command": "aiDiffSample.deleteSession",
 					"when": "view == aiDiffView",
 					"group": "navigation"
 				}

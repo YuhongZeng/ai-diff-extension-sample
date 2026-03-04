@@ -37,6 +37,11 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     const attachSession = (session: vscode.chat.ChatEditingSession) => {
+        // Prevent duplicate attachments
+        if (sessions.find(s => s.id === session.id)) {
+            return;
+        }
+
         sessions.push(session);
         currentSession = session;
         

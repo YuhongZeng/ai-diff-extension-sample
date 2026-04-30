@@ -28,6 +28,11 @@
 				"icon": "$(clear-all)"
 			},
 			{
+				"command": "aiDiffSample.show",
+				"title": "show",
+				"icon": "$(eye)"
+			},
+			{
 				"command": "aiDiffSample.createMultiSession",
 				"title": "Add Session",
 				"icon": "$(add)"
@@ -87,6 +92,16 @@
 			{
 				"command": "aiDiffSample.renameFile",
 				"title": "Rename File (AI Diff)"
+			},
+			{
+				"command": "aiDiffSample.simulateRandomMultiFileEdits",
+				"title": "Simulate Random Multi-File Edits",
+				"icon": "$(wand)"
+			},
+			{
+				"command": "aiDiffSample.simulateApplyEditsFailure",
+				"title": "Simulate Apply Edits Failure",
+				"icon": "$(warning)"
 			}
 		],
 		"menus": {
@@ -138,6 +153,21 @@
 				},
 				{
 					"command": "aiDiffSample.deleteSession",
+					"when": "view == aiDiffView",
+					"group": "navigation"
+				},
+				{
+					"command": "aiDiffSample.show",
+					"when": "view == aiDiffView",
+					"group": "navigation"
+				},
+				{
+					"command": "aiDiffSample.simulateRandomMultiFileEdits",
+					"when": "view == aiDiffView",
+					"group": "navigation"
+				},
+				{
+					"command": "aiDiffSample.simulateApplyEditsFailure",
 					"when": "view == aiDiffView",
 					"group": "navigation"
 				}

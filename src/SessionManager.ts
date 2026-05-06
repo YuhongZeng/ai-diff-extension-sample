@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { UIManager } from './UIManager';
+import { UIManager } from './UIManager.js';
 
 export class SessionManager {
     private sessions: vscode.chat.ChatEditingSession[] = [];
@@ -76,14 +76,21 @@ export class SessionManager {
         for (const id of lastSessionIds) {
             try {
                 const session = await vscode.chat.startEditingSession({ chatSessionId: id });
+                // Check if the returned session ID matches the one we tried to restore.
+                // If it's different, it means the old session was invalid and the API quietly created a new one.
+                if (session.id !== id) {
+                    session.dispose(); // Clean up the unwanted newly created session
+                    continue; // Skip attaching and let the old ID be naturally purged
+                }
                 this.attachSession(session);
             } catch (e) {
-                // Failed to restore, remove from list
-                let ids = this.context.globalState.get<string[]>('chatEditingSessionIds') || [];
-                ids = ids.filter(savedId => savedId !== id);
-                this.context.globalState.update('chatEditingSessionIds', ids);
+                // Failed to restore, just ignore it. It will be cleaned up below.
             }
         }
+        
+        // Purge invalid IDs: Only keep the IDs of sessions that are currently alive
+        const aliveIds = this.sessions.map(s => s.id);
+        this.context.globalState.update('chatEditingSessionIds', aliveIds);
         
         // Restore active session selection
         if (lastActiveId) {

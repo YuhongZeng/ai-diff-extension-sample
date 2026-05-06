@@ -4,6 +4,18 @@ import { UIManager } from './UIManager';
 
 let simulationState: { originalUri: vscode.Uri, originalContent: string, tempUri?: vscode.Uri } | undefined;
 
+// Helper to handle applyEdits result and print detailed failure messages
+function handleApplyEditsResult(result: vscode.chat.ChatEditingSessionApplyEditsResult, defaultError: string) {
+    if (result.success) return;
+
+    let errorMsg = result.errorMessage || defaultError;
+    if (result.failedEdits && result.failedEdits.length > 0) {
+        const details = result.failedEdits.map(f => `${vscode.workspace.asRelativePath(f.uri)}: ${f.reason}`).join(', ');
+        errorMsg += `\nFailed files: ${details}`;
+    }
+    vscode.window.showErrorMessage(errorMsg);
+}
+
 export function registerCommands(context: vscode.ExtensionContext, sessionManager: SessionManager, uiManager: UIManager) {
     
     // --- Session Management ---
@@ -197,9 +209,7 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
         }
 
         const result = await session.applyEdits(edit, "Complex AI Edits");
-        if (!result.success) {
-            vscode.window.showErrorMessage(result.errorMessage || 'Failed to apply complex edits');
-        }
+        handleApplyEditsResult(result, 'Failed to apply complex edits');
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.deleteFile', async (uri?: vscode.Uri) => {
@@ -225,9 +235,7 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
         const edit = new vscode.WorkspaceEdit();
         edit.deleteFile(uri, { ignoreIfNotExists: true });
         const result = await session.applyEdits(edit, `Delete ${vscode.workspace.asRelativePath(uri)}`);
-        if (!result.success) {
-            vscode.window.showErrorMessage(result.errorMessage || 'Failed to delete file');
-        }
+        handleApplyEditsResult(result, 'Failed to delete file');
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.renameFile', async (uri?: vscode.Uri) => {
@@ -264,9 +272,7 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
         const edit = new vscode.WorkspaceEdit();
         edit.renameFile(uri, newUri, { ignoreIfExists: true });
         const result = await session.applyEdits(edit, `Rename ${vscode.workspace.asRelativePath(uri)} to ${vscode.workspace.asRelativePath(newUri)}`);
-        if (!result.success) {
-            vscode.window.showErrorMessage(result.errorMessage || 'Failed to rename file');
-        }
+        handleApplyEditsResult(result, 'Failed to rename file');
     }));
 
     // --- Interactive Diff Simulation ---
@@ -356,9 +362,7 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
         }
         
         const result = await session.applyEdits(workspaceEdit, "Interactive Simulation");
-        if (!result.success) {
-            vscode.window.showErrorMessage(result.errorMessage || 'Failed to apply simulation');
-        }
+        handleApplyEditsResult(result, 'Failed to apply simulation');
         
         await closeSimulation();
         vscode.window.showInformationMessage('Simulation Applied');
@@ -429,9 +433,7 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
         }
 
         const result = await session.applyEdits(edit, "Random Multi-File Edits");
-        if (!result.success) {
-            vscode.window.showErrorMessage(result.errorMessage || 'Failed to apply random edits');
-        }
+        handleApplyEditsResult(result, 'Failed to apply random edits');
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.simulateApplyEditsFailure', async () => {
@@ -455,7 +457,12 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
         
         // 5. Verify error handling
         if (!result.success) {
-            vscode.window.showErrorMessage(`Expected Failure Captured: ${result.errorMessage || 'Unknown Error'}`);
+            let errorMsg = `Expected Failure Captured: ${result.errorMessage || 'Unknown Error'}`;
+            if (result.failedEdits && result.failedEdits.length > 0) {
+                const details = result.failedEdits.map(f => `${vscode.workspace.asRelativePath(f.uri)}: ${f.reason}`).join(', ');
+                errorMsg += `\nFailed files: ${details}`;
+            }
+            vscode.window.showErrorMessage(errorMsg);
         } else {
             vscode.window.showWarningMessage('Unexpected: applyEdits succeeded on disposed session');
         }

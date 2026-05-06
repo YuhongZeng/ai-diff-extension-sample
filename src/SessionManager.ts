@@ -7,7 +7,8 @@ export class SessionManager {
 
     constructor(
         private context: vscode.ExtensionContext,
-        private uiManager: UIManager
+        private uiManager: UIManager,
+        private outputChannel: vscode.OutputChannel
     ) {}
 
     get currentSession(): vscode.chat.ChatEditingSession | undefined {
@@ -39,7 +40,23 @@ export class SessionManager {
         }
         this.context.globalState.update('lastActiveChatEditingSessionId', session.id);
 
-        this.context.subscriptions.push(session.onDidChange(() => this.uiManager.updateUI(this)));
+        this.context.subscriptions.push(session.onDidChange(() => {
+            this.outputChannel.appendLine(`[Event] Session ${session.id.substring(0, 8)}: onDidChange fired (files count: ${session.files.length})`);
+            this.uiManager.updateUI(this);
+        }));
+
+        this.context.subscriptions.push(session.onDidUserAction((action) => {
+            const actionMap: { [key: number]: string } = {
+                1: 'FileAccepted',
+                2: 'FileRejected',
+                3: 'HunkAccepted',
+                4: 'HunkRejected'
+            };
+            const actionName = actionMap[action.type] || `UnknownAction(${action.type})`;
+            const source = action.isFromApi ? 'API Call' : 'User UI Interaction';
+            this.outputChannel.appendLine(`[Event] Session ${session.id.substring(0, 8)}: onDidUserAction fired. Type: ${actionName}, Source: ${source}, URI: ${vscode.workspace.asRelativePath(action.uri)}`);
+        }));
+
         this.context.subscriptions.push(session.onDidDispose(() => {
             this.sessions = this.sessions.filter(s => s !== session);
             

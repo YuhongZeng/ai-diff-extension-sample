@@ -54,9 +54,13 @@ declare module 'vscode' {
 			readonly uri: Uri;
 			/**
 			 * Indicates whether this action was triggered by an extension calling the API (true)
-			 * or by a user interacting with the UI (false or undefined).
+			 * or by a user interacting with the UI (false).
 			 */
 			readonly isFromApi?: boolean;
+			/**
+			 * The state of the file after the action was applied.
+			 */
+			readonly file: ChatEditingFile;
 		}
 
 		export interface ChatEditingSession extends Disposable {

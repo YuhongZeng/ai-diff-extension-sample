@@ -52,9 +52,24 @@ export class SessionManager {
                 3: 'HunkAccepted',
                 4: 'HunkRejected'
             };
+            
+            const stateMap: { [key: number]: string } = {
+                0: 'Modified',
+                1: 'Accepted',
+                2: 'Rejected'
+            };
+
             const actionName = actionMap[action.type] || `UnknownAction(${action.type})`;
             const source = action.isFromApi ? 'API Call' : 'User UI Interaction';
-            this.outputChannel.appendLine(`[Event] Session ${session.id.substring(0, 8)}: onDidUserAction fired. Type: ${actionName}, Source: ${source}, URI: ${vscode.workspace.asRelativePath(action.uri)}`);
+            
+            let fileInfo = '';
+            if (action.file) {
+                const f = action.file;
+                const stateStr = stateMap[f.state] || `Unknown(${f.state})`;
+                fileInfo = ` | FileState: ${stateStr}, isNew: ${f.isNew}, +${f.added} -${f.removed}`;
+            }
+
+            this.outputChannel.appendLine(`[Event] Session ${session.id.substring(0, 8)}: onDidUserAction fired. Type: ${actionName}, Source: ${source}, URI: ${vscode.workspace.asRelativePath(action.uri)}${fileInfo}`);
         }));
 
         this.context.subscriptions.push(session.onDidDispose(() => {

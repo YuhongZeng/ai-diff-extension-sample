@@ -1,217 +1,220 @@
 {
-	"name": "ai-diff-sample",
-	"displayName": "AI Diff Sample",
-	"description": "Demonstrates usage of the AI Diff API",
-	"version": "0.0.1",
-	"engines": {
-		"vscode": "^1.96.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [],
-	"main": "./out/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "aiDiffSample.start",
-				"title": "Start AI Diff Session"
-			},
-			{
-				"command": "aiDiffSample.accept",
-				"title": "Accept All Changes",
-				"icon": "$(check-all)"
-			},
-			{
-				"command": "aiDiffSample.reject",
-				"title": "Reject All Changes",
-				"icon": "$(clear-all)"
-			},
-			{
-				"command": "aiDiffSample.show",
-				"title": "show",
-				"icon": "$(eye)"
-			},
-			{
-				"command": "aiDiffSample.createMultiSession",
-				"title": "Add Session",
-				"icon": "$(add)"
-			},
-			{
-				"command": "aiDiffSample.switchSession",
-				"title": "Switch Session",
-				"icon": "$(list-selection)"
-			},
-			{
-				"command": "aiDiffSample.deleteSession",
-				"title": "Delete Session",
-				"icon": "$(trash)"
-			},
-			{
-				"command": "aiDiffSample.simulateEdit",
-				"title": "Simulate AI Edit"
-			},
-			{
-				"command": "aiDiffSample.startSimulation",
-				"title": "Interactive Diff Simulation: Start"
-			},
-			{
-				"command": "aiDiffSample.applySimulation",
-				"title": "Interactive Diff Simulation: Apply"
-			},
-			{
-				"command": "aiDiffSample.acceptFile",
-				"title": "Accept File",
-				"icon": "$(check)"
-			},
-			{
-				"command": "aiDiffSample.rejectFile",
-				"title": "Reject File",
-				"icon": "$(close)"
-			},
-			{
-				"command": "aiDiffSample.toggleDiff",
-				"title": "Toggle Diff View"
-			},
-			{
-				"command": "aiDiffSample.nextFile",
-				"title": "Next Modified File"
-			},
-			{
-				"command": "aiDiffSample.prevFile",
-				"title": "Previous Modified File"
-			},
-			{
-				"command": "aiDiffSample.simulateComplexEdits",
-				"title": "Simulate Complex Edits (Files/Lines)"
-			},
-			{
-				"command": "aiDiffSample.deleteFile",
-				"title": "Delete File (AI Diff)"
-			},
-			{
-				"command": "aiDiffSample.renameFile",
-				"title": "Rename File (AI Diff)"
-			},
-			{
-				"command": "aiDiffSample.simulateRandomMultiFileEdits",
-				"title": "Simulate Random Multi-File Edits",
-				"icon": "$(wand)"
-			},
-			{
-				"command": "aiDiffSample.simulateApplyEditsFailure",
-				"title": "Simulate Apply Edits Failure",
-				"icon": "$(warning)"
-			}
-		],
-		"menus": {
-			"editor/context": [
-				{
-					"command": "aiDiffSample.startSimulation",
-					"group": "navigation"
-				}
-			],
-			"explorer/context": [
-				{
-					"command": "aiDiffSample.deleteFile",
-					"group": "2_workspace",
-					"when": "!explorerResourceIsRoot"
-				},
-				{
-					"command": "aiDiffSample.renameFile",
-					"group": "2_workspace",
-					"when": "!explorerResourceIsRoot"
-				}
-			],
-			"editor/title": [
-				{
-					"command": "aiDiffSample.applySimulation",
-					"group": "navigation",
-					"when": "resourceScheme == 'untitled'"
-				}
-			],
-			"view/title": [
-				{
-					"command": "aiDiffSample.accept",
-					"when": "view == aiDiffView",
-					"group": "navigation"
-				},
-				{
-					"command": "aiDiffSample.reject",
-					"when": "view == aiDiffView",
-					"group": "navigation"
-				},
-				{
-					"command": "aiDiffSample.createMultiSession",
-					"when": "view == aiDiffView",
-					"group": "navigation"
-				},
-				{
-					"command": "aiDiffSample.switchSession",
-					"when": "view == aiDiffView",
-					"group": "navigation"
-				},
-				{
-					"command": "aiDiffSample.deleteSession",
-					"when": "view == aiDiffView",
-					"group": "navigation"
-				},
-				{
-					"command": "aiDiffSample.show",
-					"when": "view == aiDiffView",
-					"group": "navigation"
-				},
-				{
-					"command": "aiDiffSample.simulateRandomMultiFileEdits",
-					"when": "view == aiDiffView",
-					"group": "navigation"
-				},
-				{
-					"command": "aiDiffSample.simulateApplyEditsFailure",
-					"when": "view == aiDiffView",
-					"group": "navigation"
-				}
-			],
-			"view/item/context": [
-				{
-					"command": "aiDiffSample.acceptFile",
-					"when": "view == aiDiffView && viewItem == aiDiffFile",
-					"group": "inline"
-				},
-				{
-					"command": "aiDiffSample.rejectFile",
-					"when": "view == aiDiffView && viewItem == aiDiffFile",
-					"group": "inline"
-				}
-			]
-		},
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "ai-diff-explorer",
-                    "title": "AI Diff",
-                    "icon": "media/icon.svg"
-                }
-            ]
-        },
-        "views": {
-            "ai-diff-explorer": [
-                {
-                    "id": "aiDiffView",
-                    "name": "Diff Stats",
-					"icon": "resources/StartAppIcon.svg"
-                }
-            ]
+  "name": "ai-diff-sample",
+  "displayName": "AI Diff Sample",
+  "description": "Demonstrates usage of the AI Diff API",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiDiffSample.start",
+        "title": "Start AI Diff Session"
+      },
+      {
+        "command": "aiDiffSample.accept",
+        "title": "Accept All Changes",
+        "icon": "$(check-all)"
+      },
+      {
+        "command": "aiDiffSample.reject",
+        "title": "Reject All Changes",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "aiDiffSample.show",
+        "title": "show",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "aiDiffSample.createMultiSession",
+        "title": "Add Session",
+        "icon": "$(add)"
+      },
+      {
+        "command": "aiDiffSample.switchSession",
+        "title": "Switch Session",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "aiDiffSample.deleteSession",
+        "title": "Delete Session",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "aiDiffSample.simulateEdit",
+        "title": "Simulate AI Edit"
+      },
+      {
+        "command": "aiDiffSample.startSimulation",
+        "title": "Interactive Diff Simulation: Start"
+      },
+      {
+        "command": "aiDiffSample.applySimulation",
+        "title": "Interactive Diff Simulation: Apply"
+      },
+      {
+        "command": "aiDiffSample.acceptFile",
+        "title": "Accept File",
+        "icon": "$(check)"
+      },
+      {
+        "command": "aiDiffSample.rejectFile",
+        "title": "Reject File",
+        "icon": "$(close)"
+      },
+      {
+        "command": "aiDiffSample.toggleDiff",
+        "title": "Toggle Diff View"
+      },
+      {
+        "command": "aiDiffSample.nextFile",
+        "title": "Next Modified File"
+      },
+      {
+        "command": "aiDiffSample.prevFile",
+        "title": "Previous Modified File"
+      },
+      {
+        "command": "aiDiffSample.simulateComplexEdits",
+        "title": "Simulate Complex Edits (Files/Lines)"
+      },
+      {
+        "command": "aiDiffSample.deleteFile",
+        "title": "Delete File (AI Diff)"
+      },
+      {
+        "command": "aiDiffSample.renameFile",
+        "title": "Rename File (AI Diff)"
+      },
+      {
+        "command": "aiDiffSample.simulateRandomMultiFileEdits",
+        "title": "Simulate Random Multi-File Edits",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "aiDiffSample.simulateApplyEditsFailure",
+        "title": "Simulate Apply Edits Failure",
+        "icon": "$(warning)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "aiDiffSample.startSimulation",
+          "group": "navigation"
         }
-	},
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./"
+      ],
+      "explorer/context": [
+        {
+          "command": "aiDiffSample.deleteFile",
+          "group": "2_workspace",
+          "when": "!explorerResourceIsRoot"
+        },
+        {
+          "command": "aiDiffSample.renameFile",
+          "group": "2_workspace",
+          "when": "!explorerResourceIsRoot"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "aiDiffSample.applySimulation",
+          "group": "navigation",
+          "when": "resourceScheme == 'untitled'"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "aiDiffSample.accept",
+          "when": "view == aiDiffView",
+          "group": "navigation"
+        },
+        {
+          "command": "aiDiffSample.reject",
+          "when": "view == aiDiffView",
+          "group": "navigation"
+        },
+        {
+          "command": "aiDiffSample.createMultiSession",
+          "when": "view == aiDiffView",
+          "group": "navigation"
+        },
+        {
+          "command": "aiDiffSample.switchSession",
+          "when": "view == aiDiffView",
+          "group": "navigation"
+        },
+        {
+          "command": "aiDiffSample.deleteSession",
+          "when": "view == aiDiffView",
+          "group": "navigation"
+        },
+        {
+          "command": "aiDiffSample.show",
+          "when": "view == aiDiffView",
+          "group": "navigation"
+        },
+        {
+          "command": "aiDiffSample.simulateRandomMultiFileEdits",
+          "when": "view == aiDiffView",
+          "group": "navigation"
+        },
+        {
+          "command": "aiDiffSample.simulateApplyEditsFailure",
+          "when": "view == aiDiffView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "aiDiffSample.acceptFile",
+          "when": "view == aiDiffView && viewItem == aiDiffFile",
+          "group": "inline"
+        },
+        {
+          "command": "aiDiffSample.rejectFile",
+          "when": "view == aiDiffView && viewItem == aiDiffFile",
+          "group": "inline"
+        }
+      ]
     },
-    "enabledApiProposals": ["chatEditing","chatParticipantPrivate"],
-    "devDependencies": {
-        "@types/vscode": "^1.96.0",
-        "typescript": "^5.3.0"
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ai-diff-explorer",
+          "title": "AI Diff",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ai-diff-explorer": [
+        {
+          "id": "aiDiffView",
+          "name": "Diff Stats",
+          "icon": "resources/StartAppIcon.svg"
+        }
+      ]
     }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "enabledApiProposals": [
+    "chatEditing",
+    "chatParticipantPrivate"
+  ],
+  "devDependencies": {
+    "@types/vscode": "^1.96.0",
+    "typescript": "^5.3.0"
+  }
 }

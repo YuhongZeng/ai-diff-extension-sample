@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { SessionManager } from './SessionManager';
 import { UIManager } from './UIManager';
 
+import { AiDiffFileTreeItem } from './TreeDataProvider';
+
 let simulationState: { originalUri: vscode.Uri, originalContent: string, tempUri?: vscode.Uri } | undefined;
 
 // Helper to handle applyEdits result and print detailed failure messages
@@ -105,26 +107,54 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
         }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.accept', async () => {
-        const session = sessionManager.currentSession;
+    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.accept', async (contextInfo?: { chatSessionId?: string }) => {
+        let session = sessionManager.currentSession;
+        
+        // If triggered from UI, it might provide the chatSessionId in the context
+        if (contextInfo && contextInfo.chatSessionId) {
+            const targetSession = sessionManager.allSessions.find(s => s.id === contextInfo.chatSessionId);
+            if (targetSession) {
+                session = targetSession;
+            }
+        }
+
         if (session) {
             await session.accept();
-            vscode.window.showInformationMessage('Session Accepted');
+            vscode.window.showInformationMessage(`Session ${session.id.substring(0, 8)} Accepted`);
+        } else {
+            vscode.window.showWarningMessage('No session to accept');
         }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.reject', async () => {
-        const session = sessionManager.currentSession;
+    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.reject', async (contextInfo?: { chatSessionId?: string }) => {
+        let session = sessionManager.currentSession;
+        
+        // If triggered from UI, it might provide the chatSessionId in the context
+        if (contextInfo && contextInfo.chatSessionId) {
+            const targetSession = sessionManager.allSessions.find(s => s.id === contextInfo.chatSessionId);
+            if (targetSession) {
+                session = targetSession;
+            }
+        }
+
         if (session) {
             await session.reject();
-            vscode.window.showInformationMessage('Session Rejected');
+            vscode.window.showInformationMessage(`Session ${session.id.substring(0, 8)} Rejected`);
+        } else {
+            vscode.window.showWarningMessage('No session to reject');
         }
     }));
 
     // --- File Specific Operations ---
 
-    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.acceptFile', async (arg?: vscode.TreeItem | vscode.Uri) => {
+    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.acceptFile', async (arg?: AiDiffFileTreeItem | vscode.TreeItem | vscode.Uri) => {
         let uri: vscode.Uri | undefined;
+        let explicitSessionId: string | undefined;
+
+        if (arg && 'sessionId' in arg && typeof arg.sessionId === 'string') {
+            explicitSessionId = arg.sessionId;
+        }
+
         if (arg instanceof vscode.TreeItem) {
             uri = arg.resourceUri;
         } else if (arg instanceof vscode.Uri) {
@@ -135,18 +165,41 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
 
         if (!uri || sessionManager.allSessions.length === 0) return;
         
-        for (const session of sessionManager.allSessions) {
-            if (session.files.some(f => f.uri.toString() === uri!.toString())) {
-                await session.accept([uri]);
-                vscode.window.showInformationMessage(`Accepted changes for ${uri.fsPath}`);
+        let targetSession: vscode.chat.ChatEditingSession | undefined;
+
+        if (explicitSessionId) {
+            targetSession = sessionManager.allSessions.find(s => s.id === explicitSessionId);
+        } else {
+            // Fallback: Check if we can uniquely identify the session by the file URI
+            // If the file is in multiple sessions, this might be ambiguous without explicitSessionId
+            const candidateSessions = sessionManager.allSessions.filter(session => 
+                session.files.some(f => f.uri.toString() === uri!.toString())
+            );
+
+            if (candidateSessions.length > 1) {
+                vscode.window.showWarningMessage(`File ${vscode.workspace.asRelativePath(uri)} is in multiple active sessions. Cannot determine which one to accept.`);
                 return;
+            } else if (candidateSessions.length === 1) {
+                targetSession = candidateSessions[0];
             }
         }
-        vscode.window.showWarningMessage('Current file is not in any active chat session');
+
+        if (targetSession) {
+            await targetSession.accept([uri]);
+            vscode.window.showInformationMessage(`Accepted changes for ${uri.fsPath} in session ${targetSession.id.substring(0, 8)}`);
+        } else {
+            vscode.window.showWarningMessage('Current file is not in any active chat session');
+        }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.rejectFile', async (arg?: vscode.TreeItem | vscode.Uri) => {
+    context.subscriptions.push(vscode.commands.registerCommand('aiDiffSample.rejectFile', async (arg?: AiDiffFileTreeItem | vscode.TreeItem | vscode.Uri) => {
         let uri: vscode.Uri | undefined;
+        let explicitSessionId: string | undefined;
+
+        if (arg && 'sessionId' in arg && typeof arg.sessionId === 'string') {
+            explicitSessionId = arg.sessionId;
+        }
+
         if (arg instanceof vscode.TreeItem) {
             uri = arg.resourceUri;
         } else if (arg instanceof vscode.Uri) {
@@ -157,14 +210,29 @@ export function registerCommands(context: vscode.ExtensionContext, sessionManage
 
         if (!uri || sessionManager.allSessions.length === 0) return;
         
-        for (const session of sessionManager.allSessions) {
-            if (session.files.some(f => f.uri.toString() === uri!.toString())) {
-                await session.reject([uri]);
-                vscode.window.showInformationMessage(`Rejected changes for ${uri.fsPath}`);
+        let targetSession: vscode.chat.ChatEditingSession | undefined;
+
+        if (explicitSessionId) {
+            targetSession = sessionManager.allSessions.find(s => s.id === explicitSessionId);
+        } else {
+            const candidateSessions = sessionManager.allSessions.filter(session => 
+                session.files.some(f => f.uri.toString() === uri!.toString())
+            );
+
+            if (candidateSessions.length > 1) {
+                vscode.window.showWarningMessage(`File ${vscode.workspace.asRelativePath(uri)} is in multiple active sessions. Cannot determine which one to reject.`);
                 return;
+            } else if (candidateSessions.length === 1) {
+                targetSession = candidateSessions[0];
             }
         }
-        vscode.window.showWarningMessage('Current file is not in any active chat session');
+
+        if (targetSession) {
+            await targetSession.reject([uri]);
+            vscode.window.showInformationMessage(`Rejected changes for ${uri.fsPath} in session ${targetSession.id.substring(0, 8)}`);
+        } else {
+            vscode.window.showWarningMessage('Current file is not in any active chat session');
+        }
     }));
 
     // --- Navigation & View ---

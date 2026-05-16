@@ -23,7 +23,7 @@ export class SessionManager {
         return this.sessions;
     }
 
-    attachSession(session: vscode.chat.ChatEditingSession) {
+    attachSession(session: vscode.chat.ChatEditingSession, isUnclaimed: boolean = false) {
         // Prevent duplicate attachments
         if (this.sessions.find(s => s.id === session.id)) {
             return;
@@ -61,15 +61,14 @@ export class SessionManager {
 
             const actionName = actionMap[action.type] || `UnknownAction(${action.type})`;
             const source = action.isFromApi ? 'API Call' : 'User UI Interaction';
-            
+                        
             let fileInfo = '';
             if (action.file) {
                 const f = action.file;
                 const stateStr = stateMap[f.state] || `Unknown(${f.state})`;
                 fileInfo = ` | FileState: ${stateStr}, isNew: ${f.isNew}, +${f.added} -${f.removed}`;
             }
-
-            this.outputChannel.appendLine(`[Event] Session ${session.id.substring(0, 8)}: onDidUserAction fired. Type: ${actionName}, Source: ${source}, URI: ${vscode.workspace.asRelativePath(action.uri)}${fileInfo}`);
+            this.outputChannel.appendLine(`[Event]  ${isUnclaimed ? 'Unclaimed ' : ''} Session ${session.id.substring(0, 8)}: onDidUserAction fired. Type: ${actionName}, Source: ${source}, URI: ${vscode.workspace.asRelativePath(action.uri)},${fileInfo}`);
         }));
 
         this.context.subscriptions.push(session.onDidDispose(() => {

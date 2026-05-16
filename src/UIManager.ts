@@ -51,6 +51,6 @@ export class UIManager {
         
         this.statusBarItem.text = `$(diff-modified) AI Diff: ${sessionManager.allSessions.length} Sessions | Current: ${sessionToDisplay?.id.substring(0, 8)} | +${added} -${removed}`;
         this.statusBarItem.show();
-        this.treeDataProvider.update(displayFiles);
+        this.treeDataProvider.update(displayFiles, sessionToDisplay?.id);
     }
 }

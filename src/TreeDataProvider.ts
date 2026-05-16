@@ -1,14 +1,25 @@
 import * as vscode from 'vscode';
 import { ChatEditingFileState } from './types';
 
-export class AiDiffTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+export class AiDiffFileTreeItem extends vscode.TreeItem {
+    constructor(
+        public readonly uri: vscode.Uri,
+        public readonly sessionId: string | undefined
+    ) {
+        super(uri);
+    }
+}
+
+export class AiDiffTreeDataProvider implements vscode.TreeDataProvider<AiDiffFileTreeItem | vscode.TreeItem> {
+    private _onDidChangeTreeData: vscode.EventEmitter<AiDiffFileTreeItem | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<AiDiffFileTreeItem | vscode.TreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<AiDiffFileTreeItem | vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
     private files: readonly vscode.chat.ChatEditingFile[] = [];
+    private currentSessionId: string | undefined;
 
-    update(files: readonly vscode.chat.ChatEditingFile[]) {
+    update(files: readonly vscode.chat.ChatEditingFile[], sessionId?: string) {
         this.files = files;
+        this.currentSessionId = sessionId;
         this._onDidChangeTreeData.fire();
     }
 
@@ -16,13 +27,13 @@ export class AiDiffTreeDataProvider implements vscode.TreeDataProvider<vscode.Tr
         return element;
     }
 
-    getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
+    getChildren(element?: vscode.TreeItem): Thenable<(AiDiffFileTreeItem | vscode.TreeItem)[]> {
         if (this.files.length === 0) {
             return Promise.resolve([new vscode.TreeItem("No Active Files")]);
         }
         
         return Promise.resolve(this.files.map(f => {
-            const item = new vscode.TreeItem(f.uri);
+            const item = new AiDiffFileTreeItem(f.uri, this.currentSessionId);
             item.contextValue = 'aiDiffFile';
             item.command = {
                 command: 'vscode.open',
